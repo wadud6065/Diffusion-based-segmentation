@@ -15,6 +15,9 @@ import numpy as np
 import time
 import torch as th
 import torch.distributed as dist
+import matplotlib.pyplot as plt
+import torch
+import torchvision.transforms as transforms
 from guided_diffusion import dist_util, logger
 from guided_diffusion.bratsloader import BRATSDataset
 from guided_diffusion.script_util import (
@@ -43,6 +46,38 @@ def dice_score(pred, targs):
     pred = (pred > 0).float()
     return 2. * (pred*targs).sum() / (pred+targs).sum()
 
+def show_tensor_images(mask, tensor_array, figsize=(10, 2), title=None, cmap='viridis', columns=6, num = 1):
+    
+    num_tensors = len(tensor_array)
+    rows = (num_tensors + columns - 1) // columns
+    fig, axes = plt.subplots(rows, columns, figsize=figsize)
+    fig.subplots_adjust(wspace=0.1, hspace=0.2)
+
+    to_pil = transforms.ToPILImage()
+    
+    if title:
+        fig.suptitle(title, fontsize=12)
+    
+    for i, ax in enumerate(axes.flat):
+        ax.axis('off')
+        if i == 0:
+            tensor = mask.squeeze().cpu()
+            tensor = to_pil(tensor)
+            ax.imshow(tensor, cmap=cmap)
+            ax.set_title('Ground Truth', fontsize=8)
+            continue
+        if i < num_tensors:
+            tensor = tensor_array[i].squeeze().cpu()
+            tensor = to_pil(tensor)
+            ax.imshow(tensor, cmap=cmap)
+            ax.set_title('Output'+str(i), fontsize=8)
+    
+    # Hide any empty subplots
+    for i in range(num_tensors, rows * columns):
+        fig.delaxes(axes.flatten()[i])
+    
+    plt.savefig('./output_images/output_figure'+str(num)+'.png')
+    plt.show()
 
 def main():
     args = create_argparser().parse_args()
@@ -76,14 +111,17 @@ def main():
     if args.use_fp16:
         model.convert_to_fp16()
     model.eval()
+    title = ''
+    cnt = 0
     while len(all_images) * args.batch_size < args.num_samples:
         # should return an image from the dataloader "data"
-        b, tmp, path = next(data)
+        b, mask, image_path, mask_path = next(data)
         c = th.randn_like(b[:, :1, ...])
         img = th.cat((b, c), dim=1)  # add a noise channel$
-        print(path)
+        print(image_path)
         # slice_ID = path[0].split("/", -1)[3]
-        slice_ID = os.path.basename(path[0]).split(".")[0]
+        slice_ID = os.path.basename(image_path[0]).split(".")[0]
+        title = os.path.basename(mask_path[0]).split(".")[0]
 
         # viz.image(visualize(img[0,0,...]), opts=dict(caption="img input0"))
         # viz.image(visualize(img[0, 1, ...]), opts=dict(caption="img input1"))
@@ -95,7 +133,8 @@ def main():
 
         start = th.cuda.Event(enable_timing=True)
         end = th.cuda.Event(enable_timing=True)
-
+        
+        tensor_list = []
         # this is for the generation of an ensemble of 5 masks.
         for i in range(args.num_ensemble):
             model_kwargs = {}
@@ -116,9 +155,13 @@ def main():
             print('time for 1 sample', start.elapsed_time(end))
 
             s = th.tensor(sample)
+            tensor_list.append(s)
             # viz.image(visualize(sample[0, 0, ...]), opts=dict(caption="sampled output"))
-            th.save(s, './outputs/'+str(slice_ID)+'_output' +
-                    str(i))  # save the generated mask
+            th.save(s, './output/'+str(slice_ID)+'_output' +str(i))  # save the generated mask
+        
+        cnt = cnt + 1
+        show_tensor_images(mask=mask, tensor_array=tensor_list, title=title, num=cnt)
+        tensor_list.clear()
 
 
 def create_argparser():

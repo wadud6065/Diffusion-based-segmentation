@@ -186,7 +186,7 @@ class TrainLoop:
         ):
 
             try:
-                batch, cond, image_path = next(data_iter)
+                batch, cond, image_path, mask_path = next(data_iter)
             except StopIteration:
                 # StopIteration is thrown if dataset ends
                 # reinitialize data loader

@@ -56,7 +56,7 @@ class MyLidcDatatset(Dataset):
                 image, mask = self.adjust_dimensions(image, mask)
 
                 image, mask = self.transform(image, mask)
-                return image, mask, self.image_paths[index]
+                return image, mask, self.image_paths[index], self.mask_paths[index]
 
             except Exception as e:
                 # if the image is corrupted, load the next image

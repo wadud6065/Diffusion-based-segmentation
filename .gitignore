@@ -1,2 +1,5 @@
-results/
-output/
+# This line indicates the file directory will be pushed to git but the contenets of the 
+# file won't be pushed.
+results/*
+output/*
+output_images/*
