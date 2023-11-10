@@ -46,8 +46,8 @@ def dice_score(pred, targs):
     pred = (pred > 0).float()
     return 2. * (pred*targs).sum() / (pred+targs).sum()
 
-def show_tensor_images(mask, tensor_array, figsize=(10, 2), title=None, cmap='viridis', columns=6, num = 1): 
-    num_tensors = len(tensor_array)+1
+def show_tensor_images(image, mask, tensor_array, figsize=(10, 2), title=None, cmap='viridis', columns=6, num = 1): 
+    num_tensors = len(tensor_array)+2
     rows = (num_tensors + columns - 1) // columns
     fig, axes = plt.subplots(rows, columns, figsize=figsize)
     fig.subplots_adjust(wspace=0.1, hspace=0.2)
@@ -60,6 +60,12 @@ def show_tensor_images(mask, tensor_array, figsize=(10, 2), title=None, cmap='vi
     for i, ax in enumerate(axes.flat):
         ax.axis('off')
         if i == 0:
+            tensor = image.squeeze().cpu()
+            tensor = to_pil(tensor)
+            ax.imshow(tensor, cmap=cmap)
+            ax.set_title('Image', fontsize=8)
+            continue
+        if i == 1:
             tensor = mask.squeeze().cpu()
             tensor = to_pil(tensor)
             ax.imshow(tensor, cmap=cmap)
@@ -165,7 +171,7 @@ def main():
             # viz.image(visualize(sample[0, 0, ...]), opts=dict(caption="sampled output"))
             th.save(s, './output/'+str(slice_ID)+'_output' +str(i))  # save the generated mask
         
-        show_tensor_images(mask=mask, tensor_array=tensor_list, title=title, num=cnt)
+        show_tensor_images(image=b, mask=mask, tensor_array=tensor_list, title=title, num=cnt)
         tensor_list.clear()
         cnt = cnt + 1
 
