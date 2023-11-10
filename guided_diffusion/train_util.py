@@ -191,7 +191,7 @@ class TrainLoop:
                 # StopIteration is thrown if dataset ends
                 # reinitialize data loader
                 data_iter = iter(self.dataloader)
-                batch, cond, image_path = next(data_iter)
+                batch, cond, image_path, mask_path = next(data_iter)
 
             self.run_step(batch, cond)
 
