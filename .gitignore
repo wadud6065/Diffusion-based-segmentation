@@ -1,5 +1,4 @@
-# This line indicates the file directory will be pushed to git but the contenets of the 
-# file won't be pushed.
-results/*
-output/*
-output_images/*
+# This line indicates the file directory won't be pushed to git.
+results/
+output/
+output_images/

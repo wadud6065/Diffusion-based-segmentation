@@ -46,9 +46,8 @@ def dice_score(pred, targs):
     pred = (pred > 0).float()
     return 2. * (pred*targs).sum() / (pred+targs).sum()
 
-def show_tensor_images(mask, tensor_array, figsize=(10, 2), title=None, cmap='viridis', columns=6, num = 1):
-    
-    num_tensors = len(tensor_array)
+def show_tensor_images(mask, tensor_array, figsize=(10, 2), title=None, cmap='viridis', columns=6, num = 1): 
+    num_tensors = len(tensor_array)+1
     rows = (num_tensors + columns - 1) // columns
     fig, axes = plt.subplots(rows, columns, figsize=figsize)
     fig.subplots_adjust(wspace=0.1, hspace=0.2)
@@ -95,6 +94,13 @@ def main():
     #     batch_size=1,
     #     shuffle=False)
     # data = iter(datal)
+
+    output_dir = './output'
+    output_img_dir = './output_images'
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    if not os.path.exists(output_img_dir):
+        os.makedirs(output_img_dir)
 
     ds = load_LIDC(image_size=224, combine_train_val=True, mode='Test')
     datal= th.utils.data.DataLoader(
@@ -154,14 +160,14 @@ def main():
             # time measurement for the generation of 1 sample
             print('time for 1 sample', start.elapsed_time(end))
 
-            s = th.tensor(sample)
+            s = sample.clone().detach()
             tensor_list.append(s)
             # viz.image(visualize(sample[0, 0, ...]), opts=dict(caption="sampled output"))
             th.save(s, './output/'+str(slice_ID)+'_output' +str(i))  # save the generated mask
         
-        cnt = cnt + 1
         show_tensor_images(mask=mask, tensor_array=tensor_list, title=title, num=cnt)
         tensor_list.clear()
+        cnt = cnt + 1
 
 
 def create_argparser():
