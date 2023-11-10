@@ -72,6 +72,7 @@ def show_tensor_images(image, mask, tensor_array, figsize=(10, 2), title=None, c
             ax.set_title('Ground Truth', fontsize=8)
             continue
         if i < num_tensors:
+            i = i - 2
             tensor = tensor_array[i].squeeze().cpu()
             tensor = to_pil(tensor)
             ax.imshow(tensor, cmap=cmap)
