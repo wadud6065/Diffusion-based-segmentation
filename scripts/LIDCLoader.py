@@ -21,13 +21,19 @@ class MyLidcDatatset(Dataset):
         self.transformations = transforms.Compose([transforms.ToTensor()])
 
     def transform(self, image, mask):
-        output_image = Image.new("RGBA", (self.image_size, self.image_size))
-        output_image.paste(image, (0, 0))
+        # output_image = Image.new("RGBA", (self.image_size, self.image_size))
+        # output_image.paste(image, (0, 0))
 
         mask = mask.convert('L')
+        image = image.convert('L')
 
-        image = self.transformations(output_image)
-        mask = self.transformations(mask)
+        # image = self.transformations(output_image)
+        # mask = self.transformations(mask)
+        to_tensor = transforms.ToTensor()
+        image = to_tensor(image)
+        mask = to_tensor(mask)
+
+        image = torch.cat((image, image, image, image), 0)
 
         image, mask = image.type(
             torch.FloatTensor), mask.type(torch.FloatTensor)

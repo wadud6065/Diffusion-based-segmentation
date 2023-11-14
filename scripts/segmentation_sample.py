@@ -113,7 +113,7 @@ def main():
     datal= th.utils.data.DataLoader(
         ds,
         batch_size=1,
-        shuffle=False)
+        shuffle=True)
     data = iter(datal)
 
     all_images = []
@@ -161,7 +161,6 @@ def main():
                 clip_denoised=args.clip_denoised,
                 model_kwargs=model_kwargs,
             )
-
             end.record()
             th.cuda.synchronize()
             # time measurement for the generation of 1 sample
