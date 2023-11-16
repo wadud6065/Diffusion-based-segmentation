@@ -150,16 +150,16 @@ class TrainLoop:
         ema_params = copy.deepcopy(self.mp_trainer.master_params)
 
         main_checkpoint = find_resume_checkpoint() or self.resume_checkpoint
-        ema_checkpoint = find_ema_checkpoint(
-            main_checkpoint, self.resume_step, rate)
+        ema_checkpoint = find_ema_checkpoint(main_checkpoint, self.resume_step, rate)
+        
         if ema_checkpoint:
-            if dist.get_rank() == 0:
-                logger.log(f"loading EMA from checkpoint: {ema_checkpoint}...")
-                state_dict = dist_util.load_state_dict(
-                    ema_checkpoint, map_location=dist_util.dev()
-                )
-                ema_params = self.mp_trainer.state_dict_to_master_params(
-                    state_dict)
+            # if dist.get_rank() == 0:
+            logger.log(f"loading EMA from checkpoint: {ema_checkpoint}...")
+            state_dict = dist_util.load_state_dict(
+                ema_checkpoint, map_location=dist_util.dev()
+            )
+            ema_params = self.mp_trainer.state_dict_to_master_params(
+                state_dict)
 
         # dist_util.sync_params(ema_params)
         return ema_params
@@ -167,7 +167,7 @@ class TrainLoop:
     def _load_optimizer_state(self):
         main_checkpoint = find_resume_checkpoint() or self.resume_checkpoint
         opt_checkpoint = bf.join(
-            bf.dirname(main_checkpoint), f"opt{self.resume_step:06}.pt"
+            bf.dirname(main_checkpoint), f"optsavedmodel{self.resume_step:06}.pt"
         )
         if bf.exists(opt_checkpoint):
             logger.log(
@@ -340,7 +340,7 @@ def find_resume_checkpoint():
 def find_ema_checkpoint(main_checkpoint, step, rate):
     if main_checkpoint is None:
         return None
-    filename = f"ema_{rate}_{(step):06d}.pt"
+    filename = f"emasavedmodel_{rate}_{(step):06d}.pt"
     path = bf.join(bf.dirname(main_checkpoint), filename)
     if bf.exists(path):
         return path

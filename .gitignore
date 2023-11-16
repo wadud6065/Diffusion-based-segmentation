@@ -2,3 +2,5 @@
 results/
 output/
 output_images/
+output_metrics/
+metrics/

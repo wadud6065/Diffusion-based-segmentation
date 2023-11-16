@@ -12,6 +12,7 @@ import sys
 import random
 sys.path.append(".")
 import numpy as np
+import pandas as pd
 import time
 import torch as th
 import torch.distributed as dist
@@ -28,6 +29,7 @@ from guided_diffusion.script_util import (
     args_to_dict,
 )
 from LIDCLoader import load_LIDC
+from performance_metrics import dice_score, calculate_hd95, iou_score
 seed=10
 th.manual_seed(seed)
 th.cuda.manual_seed_all(seed)
@@ -42,47 +44,30 @@ def visualize(img):
     return normalized_img
 
 
-def dice_score(pred, targs):
-    pred = (pred > 0).float()
-    return 2. * (pred*targs).sum() / (pred+targs).sum()
-
-def show_tensor_images(image, mask, tensor_array, figsize=(10, 2), title=None, cmap='viridis', columns=6, num = 1): 
-    num_tensors = len(tensor_array)+2
-    rows = (num_tensors + columns - 1) // columns
-    fig, axes = plt.subplots(rows, columns, figsize=figsize)
-    fig.subplots_adjust(wspace=0.1, hspace=0.2)
-
+def show_tensor_images(image, mask, output, num, title=None): 
     to_pil = transforms.ToPILImage()
-    
-    if title:
-        fig.suptitle(title, fontsize=12)
-    
-    for i, ax in enumerate(axes.flat):
+
+    pil_image1 = to_pil(image.squeeze().cpu())
+    pil_image2 = to_pil(mask.squeeze().cpu())
+    pil_image3 = to_pil(output)
+
+    # Plotting
+    fig, axes = plt.subplots(1, 3, figsize=(12, 4))
+    fig.suptitle(title, fontsize=14)
+
+    axes[0].imshow(pil_image1)
+    axes[0].set_title('Image', fontsize=10)
+
+    axes[1].imshow(pil_image2)
+    axes[1].set_title('Ground Truth', fontsize=10)
+
+    axes[2].imshow(pil_image3)
+    axes[2].set_title('Output', fontsize=10)
+
+    for ax in axes:
         ax.axis('off')
-        if i == 0:
-            tensor = image.squeeze().cpu()
-            tensor = to_pil(tensor)
-            ax.imshow(tensor, cmap=cmap)
-            ax.set_title('Image', fontsize=8)
-            continue
-        if i == 1:
-            tensor = mask.squeeze().cpu()
-            tensor = to_pil(tensor)
-            ax.imshow(tensor, cmap=cmap)
-            ax.set_title('Ground Truth', fontsize=8)
-            continue
-        if i < num_tensors:
-            i = i - 2
-            tensor = tensor_array[i].squeeze().cpu()
-            tensor = to_pil(tensor)
-            ax.imshow(tensor, cmap=cmap)
-            ax.set_title('Output'+str(i), fontsize=8)
-    
-    # Hide any empty subplots
-    for i in range(num_tensors, rows * columns):
-        fig.delaxes(axes.flatten()[i])
-    
-    plt.savefig('./output_images/output_figure'+str(num)+'.png')
+
+    plt.savefig('./output_images/Output_'+str(num)+'.png')
     plt.show()
 
 def main():
@@ -104,10 +89,14 @@ def main():
 
     output_dir = './output'
     output_img_dir = './output_images'
+    output_metrics_dir = './output_metrics'
+
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     if not os.path.exists(output_img_dir):
         os.makedirs(output_img_dir)
+    if not os.path.exists(output_metrics_dir):
+        os.makedirs(output_metrics_dir)
 
     ds = load_LIDC(image_size=224, combine_train_val=True, mode='Test')
     datal= th.utils.data.DataLoader(
@@ -124,6 +113,10 @@ def main():
     if args.use_fp16:
         model.convert_to_fp16()
     model.eval()
+
+    data = {'title': [], 'dice_score': [], 'ioU': [], 'hd95': []}
+    df = pd.DataFrame(data)
+
     title = ''
     cnt = 0
     while len(all_images) * args.batch_size < args.num_samples:
@@ -167,11 +160,26 @@ def main():
             print('time for 1 sample', start.elapsed_time(end))
 
             s = sample.clone().detach()
-            tensor_list.append(s)
+            tensor_list.append(s.squeeze().cpu())
             # viz.image(visualize(sample[0, 0, ...]), opts=dict(caption="sampled output"))
-            th.save(s, './output/'+str(slice_ID)+'_output' +str(i))  # save the generated mask
         
-        show_tensor_images(image=b, mask=mask, tensor_array=tensor_list, title=title, num=cnt)
+        index, dice_high = 0, dice_score(pred=tensor_list[0], targs=mask.squeeze().cpu())
+        for i in range(1, args.num_ensemble):
+            res = dice_score(pred=tensor_list[i], targs=mask.squeeze().cpu())
+            if dice_high < res:
+                index, dice_high = i, res
+        
+        hd95_score = calculate_hd95(pred=tensor_list[index], target=mask.squeeze().cpu())
+        ioU = iou_score(pred=tensor_list[index], target=mask.squeeze().cpu())
+
+        new_row = pd.DataFrame([[title, dice_score, ioU, hd95_score]], 
+                    columns=['title', 'dice_score', 'ioU', 'hd95'])
+        df = pd.concat([df, new_row], ignore_index=True)
+        output_file_path = os.path.join(output_metrics_dir, 'evaluation_metrics.csv')
+        df.to_csv(output_file_path, index=False)
+
+        show_tensor_images(image=b, mask=mask, output=tensor_list[index], num=cnt, title=str(slice_ID))
+        th.save(tensor_list[index], './output/'+str(slice_ID)+'_output')  # save the generated mask
         tensor_list.clear()
         cnt = cnt + 1
 
