@@ -114,8 +114,8 @@ def main():
         model.convert_to_fp16()
     model.eval()
 
-    data = {'title': [], 'dice_score': [], 'ioU': [], 'hd95': []}
-    df = pd.DataFrame(data)
+    dp = {'title': [], 'dice_score': [], 'ioU': [], 'hd95': []}
+    df = pd.DataFrame(dp)
 
     title = ''
     cnt = 0
@@ -172,7 +172,7 @@ def main():
         hd95_score = calculate_hd95(pred=tensor_list[index], target=mask.squeeze().cpu())
         ioU = iou_score(pred=tensor_list[index], target=mask.squeeze().cpu())
 
-        new_row = pd.DataFrame([[title, dice_score, ioU, hd95_score]], 
+        new_row = pd.DataFrame([[title, dice_high, ioU, hd95_score]], 
                     columns=['title', 'dice_score', 'ioU', 'hd95'])
         df = pd.concat([df, new_row], ignore_index=True)
         output_file_path = os.path.join(output_metrics_dir, 'evaluation_metrics.csv')
