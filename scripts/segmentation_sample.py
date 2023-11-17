@@ -29,7 +29,7 @@ from guided_diffusion.script_util import (
     args_to_dict,
 )
 from LIDCLoader import load_LIDC
-from performance_metrics import dice_score, calculate_hd95, iou_score
+from performance_metrics import dice_score, calculate_hd95, iou_score, dice_coef2
 seed=10
 th.manual_seed(seed)
 th.cuda.manual_seed_all(seed)
@@ -117,6 +117,9 @@ def main():
     dp = {'title': [], 'dice_score': [], 'ioU': [], 'hd95': []}
     df = pd.DataFrame(dp)
 
+    # for i in range(5):
+    #     b, mask, image_path, mask_path = next(data)
+
     title = ''
     cnt = 0
     while len(all_images) * args.batch_size < args.num_samples:
@@ -163,9 +166,9 @@ def main():
             tensor_list.append(s.squeeze().cpu())
             # viz.image(visualize(sample[0, 0, ...]), opts=dict(caption="sampled output"))
         
-        index, dice_high = 0, dice_score(pred=tensor_list[0], targs=mask.squeeze().cpu())
+        index, dice_high = 0, dice_coef2(pred=tensor_list[0], target=mask.squeeze().cpu())
         for i in range(1, args.num_ensemble):
-            res = dice_score(pred=tensor_list[i], targs=mask.squeeze().cpu())
+            res = dice_coef2(pred=tensor_list[i], target=mask.squeeze().cpu())
             if dice_high < res:
                 index, dice_high = i, res
         

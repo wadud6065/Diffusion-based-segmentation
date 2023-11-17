@@ -34,3 +34,14 @@ def iou_score(pred, target):
 def dice_score(pred, targs):
     pred = (pred > 0).float()
     return (2. * (pred*targs).sum() / (pred+targs).sum()).item()
+
+def dice_coef2(pred, target):
+    "This metric is for validation purpose"
+    smooth = 1e-5
+
+    pred = (pred>0.5).numpy()
+    target = target.numpy()
+    intersection = (pred * target).sum()
+
+    return (2. * intersection + smooth) / \
+        (pred.sum() + target.sum() + smooth)
