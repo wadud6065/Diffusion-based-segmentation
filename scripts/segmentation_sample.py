@@ -102,7 +102,7 @@ def main():
     datal= th.utils.data.DataLoader(
         ds,
         batch_size=1,
-        shuffle=True)
+        shuffle=False)
     data = iter(datal)
 
     all_images = []
@@ -121,7 +121,7 @@ def main():
     #     b, mask, image_path, mask_path = next(data)
 
     title = ''
-    cnt = 0
+    cnt = 1
     while len(all_images) * args.batch_size < args.num_samples:
         # should return an image from the dataloader "data"
         b, mask, image_path, mask_path = next(data)
