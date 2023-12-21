@@ -17,6 +17,7 @@ from guided_diffusion.script_util import (
 import torch as th
 from guided_diffusion.train_util import TrainLoop
 from LIDCLoader import load_LIDC
+from torchinfo import summary
 # from visdom import Visdom
 # viz = Visdom(port=8850)
 
@@ -40,6 +41,12 @@ def main():
     #     batch_size=args.batch_size,
     #     shuffle=True)
     # data = iter(datal)
+
+    # print(model)
+    # summary(model=model)
+    # total_params = sum(param.numel() for param in model.parameters())
+    # print(total_params)
+
 
     ds = load_LIDC(image_size=224, combine_train_val=True, mode='Train')
     datal= th.utils.data.DataLoader(

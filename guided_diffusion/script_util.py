@@ -4,6 +4,7 @@ import inspect
 from . import gaussian_diffusion as gd
 from .respace import SpacedDiffusion, space_timesteps
 from .unet import SuperResModel, UNetModel, EncoderUNetModel
+from .mobileTrans import MobileViT
 
 NUM_CLASSES = 2
 
@@ -163,25 +164,38 @@ def create_model(
     for res in attention_resolutions.split(","):
         attention_ds.append(image_size // int(res))
 
-    return UNetModel(
-        image_size=image_size,
-        in_channels=5,
-        model_channels=num_channels,
-        out_channels=2,#(3 if not learn_sigma else 6),
-        num_res_blocks=num_res_blocks,
-        attention_resolutions=tuple(attention_ds),
-        dropout=dropout,
-        channel_mult=channel_mult,
-        num_classes=(NUM_CLASSES if class_cond else None),
-        use_checkpoint=use_checkpoint,
-        use_fp16=use_fp16,
-        num_heads=num_heads,
-        num_head_channels=num_head_channels,
-        num_heads_upsample=num_heads_upsample,
-        use_scale_shift_norm=use_scale_shift_norm,
-        resblock_updown=resblock_updown,
-        use_new_attention_order=use_new_attention_order,
-    )
+    features_list = [16, 32, 64, 64, 96, 96, 128, 128, 160, 160, 640]
+    expansion = 8
+    d_list = [144, 192, 240]
+    transformer_depth = [2, 3, 4]
+
+    return MobileViT(img_size=224,
+                    input_channels=5,
+                    features_list=features_list,
+                    d_list=d_list,
+                    transformer_depth=transformer_depth,
+                    expansion=expansion,
+                    output_channels=2)
+
+    # return UNetModel(
+    #     image_size=image_size,
+    #     in_channels=5,
+    #     model_channels=num_channels,
+    #     out_channels=2,#(3 if not learn_sigma else 6),
+    #     num_res_blocks=num_res_blocks,
+    #     attention_resolutions=tuple(attention_ds),
+    #     dropout=dropout,
+    #     channel_mult=channel_mult,
+    #     num_classes=(NUM_CLASSES if class_cond else None),
+    #     use_checkpoint=use_checkpoint,
+    #     use_fp16=use_fp16,
+    #     num_heads=num_heads,
+    #     num_head_channels=num_head_channels,
+    #     num_heads_upsample=num_heads_upsample,
+    #     use_scale_shift_norm=use_scale_shift_norm,
+    #     resblock_updown=resblock_updown,
+    #     use_new_attention_order=use_new_attention_order,
+    # )
 
 
 def create_classifier_and_diffusion(

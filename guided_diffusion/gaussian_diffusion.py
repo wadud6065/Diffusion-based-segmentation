@@ -259,13 +259,16 @@ class GaussianDiffusion:
         assert t.shape == (B,)
         model_output = model(x, self._scale_timesteps(t), **model_kwargs)
         x=x[:,-1:,...]  #loss is only calculated on the last channel, not on the input brain MR image
+        
         if self.model_var_type in [ModelVarType.LEARNED, ModelVarType.LEARNED_RANGE]:
+            # This part will be in output
             assert model_output.shape == (B, C * 2, *x.shape[2:])
             model_output, model_var_values = th.split(model_output, C, dim=1)
             if self.model_var_type == ModelVarType.LEARNED:
                 model_log_variance = model_var_values
                 model_variance = th.exp(model_log_variance)
             else:
+                # This part will be in output
                 min_log = _extract_into_tensor(
                     self.posterior_log_variance_clipped, t, x.shape
                 )
@@ -303,9 +306,11 @@ class GaussianDiffusion:
             )
             model_mean = model_output
         elif self.model_mean_type in [ModelMeanType.START_X, ModelMeanType.EPSILON]:
+            # This part will be in output
             if self.model_mean_type == ModelMeanType.START_X:
                 pred_xstart = process_xstart(model_output)
             else:
+                # This part will be in output
                 pred_xstart = process_xstart(
                     self._predict_xstart_from_eps(x_t=x, t=t, eps=model_output)
                 )

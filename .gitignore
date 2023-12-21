@@ -4,3 +4,4 @@ output/
 output_images/
 output_metrics/
 metrics/
+__pycache__/
