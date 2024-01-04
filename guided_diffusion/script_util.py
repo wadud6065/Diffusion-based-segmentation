@@ -170,7 +170,7 @@ def create_model(
     transformer_depth = [2, 3, 4]
 
     return MobileViT(img_size=224,
-                    input_channels=5,
+                    input_channels=3,
                     features_list=features_list,
                     d_list=d_list,
                     transformer_depth=transformer_depth,

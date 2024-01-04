@@ -68,7 +68,7 @@ def show_tensor_images(image, mask, output, num, title=None):
         ax.axis('off')
 
     plt.savefig('./output_images/Output_'+str(num)+'.png')
-    plt.show()
+    # plt.show()
 
 def main():
     args = create_argparser().parse_args()
@@ -117,7 +117,7 @@ def main():
     dp = {'title': [], 'dice_score': [], 'ioU': [], 'hd95': []}
     df = pd.DataFrame(dp)
 
-    # for i in range(5):
+    # for i in range(30):
     #     b, mask, image_path, mask_path = next(data)
 
     title = ''
@@ -192,7 +192,7 @@ def create_argparser():
         data_dir="./data/testing",
         clip_denoised=True,
         num_samples=1,
-        batch_size=1,
+        batch_size=32,
         use_ddim=False,
         model_path="",
         num_ensemble=5  # number of samples in the ensemble

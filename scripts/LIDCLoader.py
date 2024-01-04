@@ -33,7 +33,7 @@ class MyLidcDatatset(Dataset):
         image = to_tensor(image)
         mask = to_tensor(mask)
 
-        image = torch.cat((image, image, image, image), 0)
+        image = torch.cat((image, image), 0)
 
         image, mask = image.type(
             torch.FloatTensor), mask.type(torch.FloatTensor)
