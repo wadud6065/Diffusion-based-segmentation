@@ -192,7 +192,7 @@ def create_argparser():
         data_dir="./data/testing",
         clip_denoised=True,
         num_samples=1,
-        batch_size=32,
+        batch_size=1,
         use_ddim=False,
         model_path="",
         num_ensemble=5  # number of samples in the ensemble
