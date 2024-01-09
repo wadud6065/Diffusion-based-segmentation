@@ -6,6 +6,7 @@ from torchinfo import summary
 from guided_diffusion.mobileTrans import MobileViT, STEM, STAGE1, STAGE2, STAGE3, STAGE4
 from guided_diffusion.module import *
 import torch.nn as nn
+from scripts.LIDCLoader import load_LIDC
 from guided_diffusion.nn import (
     checkpoint,
     conv_nd,
@@ -30,32 +31,20 @@ class Test_Unet:
 
     def test_unet(self):
         print('\n')
-
-        # model_cfg = {
-        #     "s":{
-        #         "features": [16, 32, 64, 64, 96, 96, 128, 128, 160, 160, 640],
-        #         "d": [144, 192, 240],
-        #         "expansion_ratio": 8,
-        #         "layers": [2, 3, 4],
-        #         "input_channels": 5,
-        #         "output_channels": 2
-        #     },
-        # }
-        # cfg_s = model_cfg["s"]
         features_list = [16, 32, 64, 64, 96, 96, 128, 128, 160, 160, 640]
         expansion = 8
         d_list = [144, 192, 240]
         transformer_depth = [2, 3, 4]
 
         mobilleVIT_model = MobileViT(img_size=224,
-                                     input_channels=5,
+                                     input_channels=3,
                                      features_list=features_list,
                                      d_list=d_list,
                                      transformer_depth=transformer_depth,
                                      expansion=expansion,
                                      output_channels=2)
 
-        input = th.randn((1, 5, 224, 224))
+        input = th.randn((1, 3, 512, 512))
 
         t = th.tensor([500] * 1, device='cpu')
 

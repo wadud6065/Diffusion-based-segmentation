@@ -48,7 +48,7 @@ def main():
     # print(total_params)
 
 
-    ds = load_LIDC(image_size=224, combine_train_val=True, mode='Train')
+    ds = load_LIDC(image_size=512, combine_train_val=True, mode='Train')
     datal= th.utils.data.DataLoader(
         ds,
         batch_size=args.batch_size,

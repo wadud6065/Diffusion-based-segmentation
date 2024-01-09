@@ -230,6 +230,8 @@ class MobileViT(nn.Module):
 
         # Stage3
         x4 = self.stage3(x3, emb)  # [4, 128, 16, 16]
+        x4 = nn.functional.interpolate(
+            x4, size=(16, 16), mode='bilinear', align_corners=True)
 
         # Stage4
         x5 = self.stage4(x4, emb)  # [4, 640, 8, 8]
@@ -241,14 +243,21 @@ class MobileViT(nn.Module):
 
         # 2, 384, 28, 28
         d2_ = self.batch_norm1(self.dconv2(self.relu(d1)))
+        d2_ = nn.functional.interpolate(d2_, size=(
+            28, 28), mode='bilinear', align_corners=True)
         d2 = torch.cat((d2_, x3), 1)
 
         # 2, 192, 56, 56
         d3_ = self.batch_norm2(self.dconv3(self.relu(d2)))
+        d3_ = nn.functional.interpolate(d3_, size=(
+            56, 56), mode='bilinear', align_corners=True)
+        # 2, 288, 56, 56
         d3 = torch.cat((d3_, x2), 1)
 
         # 2, 96, 112, 112
         d4_ = self.batch_norm3(self.dconv4(self.relu(d3)))
+        d4_ = nn.functional.interpolate(d4_, size=(
+            112, 112), mode='bilinear', align_corners=True)
         d4 = torch.cat((d4_, x1), 1)
 
         d5 = self.dconv5(self.relu(d4))
