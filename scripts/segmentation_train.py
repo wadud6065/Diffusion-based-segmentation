@@ -48,7 +48,7 @@ def main():
     # print(total_params)
 
 
-    ds = load_LIDC(image_size=512, combine_train_val=True, mode='Train')
+    ds = load_LIDC(image_size=256, combine_train_val=True, mode='Train')
     datal= th.utils.data.DataLoader(
         ds,
         batch_size=args.batch_size,
@@ -84,7 +84,7 @@ def create_argparser():
         lr=1e-4,
         weight_decay=0.0,
         lr_anneal_steps=0,
-        batch_size=32,
+        batch_size=8,
         microbatch=-1,  # -1 disables microbatches
         ema_rate="0.9999",  # comma-separated list of EMA values
         log_interval=100,
