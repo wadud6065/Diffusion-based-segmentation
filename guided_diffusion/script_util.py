@@ -4,7 +4,8 @@ import inspect
 from . import gaussian_diffusion as gd
 from .respace import SpacedDiffusion, space_timesteps
 from .unet import SuperResModel, UNetModel, EncoderUNetModel
-from .mobileTrans import MobileViT
+# from .mobileTrans import MobileViT
+from .old_mobileTrans import MobileViT
 from .elunet import ELUnet
 
 NUM_CLASSES = 2
@@ -165,20 +166,20 @@ def create_model(
     for res in attention_resolutions.split(","):
         attention_ds.append(image_size // int(res))
 
-    return ELUnet(in_channels=3, out_channels=2, n=16)
+    # return ELUnet(in_channels=3, out_channels=2, n=16)
     
-    # features_list = [16, 32, 64, 64, 96, 96, 128, 128, 160, 160, 640]
-    # expansion = 8
-    # d_list = [144, 192, 240]
-    # transformer_depth = [2, 3, 4]
+    features_list = [16, 32, 64, 64, 96, 96, 128, 128, 160, 160, 640]
+    expansion = 8
+    d_list = [144, 192, 240]
+    transformer_depth = [2, 3, 4]
 
-    # return MobileViT(img_size=224,
-    #                 input_channels=3,
-    #                 features_list=features_list,
-    #                 d_list=d_list,
-    #                 transformer_depth=transformer_depth,
-    #                 expansion=expansion,
-    #                 output_channels=2)
+    return MobileViT(img_size=224,
+                    input_channels=5,
+                    features_list=features_list,
+                    d_list=d_list,
+                    transformer_depth=transformer_depth,
+                    expansion=expansion,
+                    output_channels=2)
 
     # return UNetModel(
     #     image_size=image_size,
