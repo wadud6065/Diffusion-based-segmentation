@@ -79,7 +79,7 @@ def main():
     model, diffusion = create_model_and_diffusion(
         **args_to_dict(args, model_and_diffusion_defaults().keys())
     )
-
+    model = th.nn.DataParallel(model)
     # ds = BRATSDataset(args.data_dir, test_flag=True)
     # datal = th.utils.data.DataLoader(
     #     ds,
@@ -98,7 +98,7 @@ def main():
     if not os.path.exists(output_metrics_dir):
         os.makedirs(output_metrics_dir)
 
-    ds = load_LIDC(image_size=256, combine_train_val=True, mode='Test')
+    ds = load_LIDC(image_size=224, combine_train_val=True, mode='Test')
     datal= th.utils.data.DataLoader(
         ds,
         batch_size=1,
@@ -117,8 +117,8 @@ def main():
     dp = {'title': [], 'dice_score': [], 'ioU': [], 'hd95': []}
     df = pd.DataFrame(dp)
 
-    for i in range(30):
-        b, mask, image_path, mask_path = next(data)
+    # for i in range(30):
+    #     b, mask, image_path, mask_path = next(data)
 
     title = ''
     cnt = 1
